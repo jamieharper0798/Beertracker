@@ -76,7 +76,6 @@ export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
         <input
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={handlePhotoChange}
           required
           className="text-xs file:mr-3 file:rounded-md file:border-0 file:bg-amber-500 file:px-3 file:py-1.5 file:text-black file:font-semibold"
@@ -92,7 +91,6 @@ export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
         <input
           type="file"
           accept="video/*"
-          capture="environment"
           onChange={handleVideoChange}
           required={needsVideo}
           className="text-xs file:mr-3 file:rounded-md file:border-0 file:bg-amber-500/80 file:px-3 file:py-1.5 file:text-black file:font-semibold"
