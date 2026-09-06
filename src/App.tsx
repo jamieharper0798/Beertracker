@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthScreen } from './components/AuthScreen';
 import { Header } from './components/Header';
 import { GroupTotalCard } from './components/GroupTotalCard';
 import { Leaderboard } from './components/Leaderboard';
-import { SubmissionForm } from './components/SubmissionForm';
+import { LogBeerModal } from './components/LogBeerModal';
 import { SubmissionFeed } from './components/SubmissionFeed';
 import { useGroupTotal } from './hooks/useGroupTotal';
 import { useLeaderboard } from './hooks/useLeaderboard';
@@ -17,6 +18,7 @@ function Dashboard() {
   const { total } = useGroupTotal();
   const { leaders } = useLeaderboard();
   const { submissions } = useSubmissions();
+  const [showLogModal, setShowLogModal] = useState(false);
 
   async function handleDelete(submissionId: string) {
     if (!user) return;
@@ -27,13 +29,21 @@ function Dashboard() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-12">
       <Header />
       <GroupTotalCard total={total} />
+
+      <button
+        type="button"
+        onClick={() => setShowLogModal(true)}
+        className="rounded-2xl bg-amber-500 py-4 text-base font-semibold text-black shadow-lg transition hover:bg-amber-400"
+      >
+        🍺 Log a beer
+      </button>
+
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="flex flex-col gap-6">
-          <SubmissionForm groupTotal={total} />
-          <Leaderboard leaders={leaders} currentUid={user?.uid} />
-        </div>
+        <Leaderboard leaders={leaders} currentUid={user?.uid} />
         <SubmissionFeed submissions={submissions} currentUid={user?.uid} onDelete={handleDelete} />
       </div>
+
+      {showLogModal && <LogBeerModal groupTotal={total} onClose={() => setShowLogModal(false)} />}
     </div>
   );
 }

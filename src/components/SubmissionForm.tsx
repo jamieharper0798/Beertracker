@@ -5,7 +5,12 @@ import { submitBeer, VideoRequiredError } from '../lib/submitBeer';
 
 const COMMENT_MAX_LENGTH = 280;
 
-export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
+interface SubmissionFormProps {
+  groupTotal: number;
+  onSuccess?: () => void;
+}
+
+export function SubmissionForm({ groupTotal, onSuccess }: SubmissionFormProps) {
   const { user, profile } = useAuth();
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -49,6 +54,7 @@ export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
       setVideoFile(null);
       setComment('');
       setVideoRequired(false);
+      onSuccess?.();
     } catch (err) {
       if (err instanceof VideoRequiredError) {
         setVideoRequired(true);
@@ -66,10 +72,8 @@ export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-2xl border border-amber-900/40 bg-[#1c1712] p-5 shadow-lg"
+      className="flex flex-col gap-4"
     >
-      <h2 className="font-[var(--font-display)] text-lg font-bold text-amber-400">Log a beer 🍺</h2>
-
       {willBeMilestone && !success && (
         <p className="rounded-lg bg-amber-500/15 px-3 py-2 text-xs text-amber-300 ring-1 ring-amber-500/30">
           This will be beer #{nextNumber} — every {SUBMISSION_MILESTONE}th beer needs a video!
