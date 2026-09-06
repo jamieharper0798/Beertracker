@@ -11,7 +11,7 @@ import { useLeaderboard } from './hooks/useLeaderboard';
 import { useSubmissions } from './hooks/useSubmissions';
 import { firebaseConfigured } from './lib/firebase';
 import { cloudinaryConfigured } from './lib/cloudinary';
-import { deleteSubmission } from './lib/submitBeer';
+import { deleteSubmission, editSubmissionComment } from './lib/submitBeer';
 
 function Dashboard() {
   const { user } = useAuth();
@@ -23,6 +23,10 @@ function Dashboard() {
   async function handleDelete(submissionId: string) {
     if (!user) return;
     await deleteSubmission(submissionId, user.uid);
+  }
+
+  async function handleSaveComment(submissionId: string, comment: string | null) {
+    await editSubmissionComment(submissionId, comment);
   }
 
   return (
@@ -40,7 +44,12 @@ function Dashboard() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <Leaderboard leaders={leaders} currentUid={user?.uid} />
-        <SubmissionFeed submissions={submissions} currentUid={user?.uid} onDelete={handleDelete} />
+        <SubmissionFeed
+          submissions={submissions}
+          currentUid={user?.uid}
+          onDelete={handleDelete}
+          onSaveComment={handleSaveComment}
+        />
       </div>
 
       {showLogModal && <LogBeerModal groupTotal={total} onClose={() => setShowLogModal(false)} />}

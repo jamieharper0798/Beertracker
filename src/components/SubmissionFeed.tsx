@@ -7,11 +7,17 @@ interface SubmissionFeedProps {
   submissions: Submission[];
   currentUid?: string;
   onDelete: (submissionId: string) => Promise<void>;
+  onSaveComment: (submissionId: string, comment: string | null) => Promise<void>;
 }
 
-export function SubmissionFeed({ submissions, currentUid, onDelete }: SubmissionFeedProps) {
+export function SubmissionFeed({ submissions, currentUid, onDelete, onSaveComment }: SubmissionFeedProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Submission | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Derived from the live list (rather than a stored copy) so the open modal
+  // reflects edits/deletes made elsewhere, and closes itself if the
+  // submission it's showing gets deleted.
+  const selected = submissions.find((s) => s.id === selectedId) ?? null;
 
   async function handleDelete(id: string) {
     if (!window.confirm('Delete this beer? This can’t be undone.')) return;
@@ -39,9 +45,9 @@ export function SubmissionFeed({ submissions, currentUid, onDelete }: Submission
                 key={s.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelected(s)}
+                onClick={() => setSelectedId(s.id)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') setSelected(s);
+                  if (e.key === 'Enter' || e.key === ' ') setSelectedId(s.id);
                 }}
                 className="flex cursor-pointer items-start gap-3 rounded-lg bg-black/20 p-2 transition hover:bg-black/30"
               >
@@ -79,7 +85,14 @@ export function SubmissionFeed({ submissions, currentUid, onDelete }: Submission
         </ul>
       )}
 
-      {selected && <SubmissionModal submission={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <SubmissionModal
+          submission={selected}
+          currentUid={currentUid}
+          onClose={() => setSelectedId(null)}
+          onSaveComment={onSaveComment}
+        />
+      )}
     </div>
   );
 }

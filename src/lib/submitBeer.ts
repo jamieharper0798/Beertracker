@@ -1,4 +1,4 @@
-import { doc, increment, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { doc, increment, runTransaction, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { uploadToCloudinary } from './cloudinary';
 import { db, SUBMISSION_MILESTONE } from './firebase';
 
@@ -97,4 +97,14 @@ export async function deleteSubmission(submissionId: string, uid: string) {
     tx.set(userRef, { count: increment(-1) }, { merge: true });
     tx.set(counterRef, { total: Math.max(0, currentTotal - 1) }, { merge: true });
   });
+}
+
+/**
+ * Edits the comment on a submission. Only the comment field is touched —
+ * Firestore rules reject this update if it tries to change anything else, or
+ * if the caller isn't the submission's owner.
+ */
+export async function editSubmissionComment(submissionId: string, comment: string | null) {
+  const submissionRef = doc(db, 'submissions', submissionId);
+  await updateDoc(submissionRef, { comment: comment || null });
 }

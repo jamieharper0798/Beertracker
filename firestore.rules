@@ -8,8 +8,10 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Submissions are readable by any signed-in user, created and deleted only
-    // by their owner, and never edited in place (delete + resubmit instead).
+    // Submissions are readable by any signed-in user, and created and deleted
+    // only by their owner. The only in-place edit allowed is changing the
+    // comment — everything else (photo, video, sequence number, uid, ...)
+    // is immutable once created.
     match /submissions/{submissionId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
@@ -17,7 +19,11 @@ service cloud.firestore {
         && (!('comment' in request.resource.data)
           || request.resource.data.comment == null
           || (request.resource.data.comment is string && request.resource.data.comment.size() <= 280));
-      allow update: if false;
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comment'])
+        && (request.resource.data.comment == null
+          || (request.resource.data.comment is string && request.resource.data.comment.size() <= 280));
       allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
     }
 
