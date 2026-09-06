@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
+import { InstallButton } from './InstallButton';
 
 export function Header() {
   const { profile, logOut } = useAuth();
@@ -12,6 +13,7 @@ export function Header() {
             {profile.displayName} · <span className="font-mono text-amber-300">{profile.count}</span>
           </span>
         )}
+        <InstallButton />
         <button
           onClick={() => logOut()}
           className="rounded-md border border-amber-900/40 px-2 py-1 text-xs text-amber-100/60 hover:text-amber-100"

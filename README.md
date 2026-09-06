@@ -10,8 +10,11 @@ a video as well as a photo.
 - Submit a beer with a required photo upload
 - Live group total counter
 - Live leaderboard ranked by each person's count
-- Recent activity feed with thumbnails
+- Recent activity feed with thumbnails — click one to view the full photo/video and comment
+- Comment on a submission, editable later by whoever posted it
+- Delete your own submissions
 - Every 100th submission (tracked globally, atomically) requires a video before it will save
+- Installable as a home-screen app (PWA) with a custom icon
 
 ## How the "every 100th" rule works
 
@@ -98,6 +101,7 @@ One-time repo setup: **Settings → Pages → Build and deployment → Source** 
 - `npm run build` — type-check and build for production
 - `npm run lint` — lint with oxlint
 - `npm run preview` — preview the production build
+- `npm run gen-icons` — regenerate `public/icons/*` from `scripts/icon-source.png`
 
 ## Notes
 
@@ -105,3 +109,18 @@ One-time repo setup: **Settings → Pages → Build and deployment → Source** 
   preset; Cloudinary's free tier includes 25GB of storage and 25GB/month of bandwidth.
 - To cap upload sizes, set a **Max file size** on the upload preset in Cloudinary's dashboard
   (Settings → Upload → your preset → Advanced options).
+
+## Icon / installing as an app
+
+The app icon lives at `scripts/icon-source.png` (a high-res master) and is resized into every size
+the browser tab, home-screen, and PWA manifest need. To change it: replace `scripts/icon-source.png`
+with a new square image (at least 512×512, ideally with the subject centered and some padding so it
+still looks right once a phone crops it into a circle/squircle), then regenerate:
+
+```bash
+npm run gen-icons
+```
+
+That overwrites everything in `public/icons/`. On a phone, visiting the deployed site offers an
+**Install App** button (or, on iOS Safari, a hint to use Share → Add to Home Screen) that adds it
+with this icon and opens it full-screen like a native app.
