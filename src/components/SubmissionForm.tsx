@@ -5,7 +5,7 @@ import { submitBeer, VideoRequiredError } from '../lib/submitBeer';
 
 const COMMENT_MAX_LENGTH = 280;
 
-export function SubmissionForm({ sequenceTotal }: { sequenceTotal: number }) {
+export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
   const { user, profile } = useAuth();
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -16,7 +16,7 @@ export function SubmissionForm({ sequenceTotal }: { sequenceTotal: number }) {
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const nextNumber = sequenceTotal + 1;
+  const nextNumber = groupTotal + 1;
   const willBeMilestone = nextNumber % SUBMISSION_MILESTONE === 0;
 
   function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {

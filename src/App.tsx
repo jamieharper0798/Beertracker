@@ -14,7 +14,7 @@ import { deleteSubmission } from './lib/submitBeer';
 
 function Dashboard() {
   const { user } = useAuth();
-  const { liveTotal, sequenceTotal } = useGroupTotal();
+  const { total } = useGroupTotal();
   const { leaders } = useLeaderboard();
   const { submissions } = useSubmissions();
 
@@ -26,10 +26,10 @@ function Dashboard() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-12">
       <Header />
-      <GroupTotalCard liveTotal={liveTotal} sequenceTotal={sequenceTotal} />
+      <GroupTotalCard total={total} />
       <div className="grid gap-6 md:grid-cols-2">
         <div className="flex flex-col gap-6">
-          <SubmissionForm sequenceTotal={sequenceTotal} />
+          <SubmissionForm groupTotal={total} />
           <Leaderboard leaders={leaders} currentUid={user?.uid} />
         </div>
         <SubmissionFeed submissions={submissions} currentUid={user?.uid} onDelete={handleDelete} />

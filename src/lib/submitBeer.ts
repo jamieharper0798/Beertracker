@@ -26,17 +26,14 @@ export async function uploadSubmissionMedia(photoFile: File, videoFile: File | n
 }
 
 /**
- * Atomically claims the next global sequence number and records the submission.
- * If the claimed number is a milestone (every 100th) and no video was attached,
+ * Atomically claims the next sequence number and records the submission. If
+ * the claimed number is a milestone (every 100th) and no video was attached,
  * the transaction aborts with VideoRequiredError so the caller can prompt for
  * a video without losing the already-uploaded photo.
  *
- * The counter document tracks two numbers: `total` is a monotonic sequence
- * counter (never decreases, even on delete) that milestone detection is based
- * on, and `liveTotal` is the displayed group total (decremented when a
- * submission is deleted). They start equal; `liveTotal` falls back to `total`
- * if it hasn't been written yet, so this works against a counter doc that
- * predates the split.
+ * The counter's `total` field is both the displayed group total and the
+ * source of the next sequence number, so it stays in sync with the milestone
+ * countdown. Deleting a submission decrements it too (see deleteSubmission).
  */
 export async function submitBeer({ uid, displayName, photoFile, videoFile, comment }: SubmitBeerArgs) {
   const { photoURL, videoURL } = await uploadSubmissionMedia(photoFile, videoFile);
@@ -47,17 +44,15 @@ export async function submitBeer({ uid, displayName, photoFile, videoFile, comme
 
   await runTransaction(db, async (tx) => {
     const counterSnap = await tx.get(counterRef);
-    const counterData = counterSnap.data();
-    const currentSequence = (counterData?.total as number) ?? 0;
-    const currentLive = (counterData?.liveTotal as number) ?? currentSequence;
-    const sequenceNumber = currentSequence + 1;
+    const currentTotal = (counterSnap.data()?.total as number) ?? 0;
+    const sequenceNumber = currentTotal + 1;
     const isMilestone = sequenceNumber % SUBMISSION_MILESTONE === 0;
 
     if (isMilestone && !videoURL) {
       throw new VideoRequiredError(sequenceNumber);
     }
 
-    tx.set(counterRef, { total: sequenceNumber, liveTotal: currentLive + 1 }, { merge: true });
+    tx.set(counterRef, { total: sequenceNumber }, { merge: true });
     tx.set(userRef, { count: increment(1) }, { merge: true });
     tx.set(submissionRef, {
       uid,
@@ -75,10 +70,12 @@ export async function submitBeer({ uid, displayName, photoFile, videoFile, comme
 }
 
 /**
- * Deletes a submission the caller owns. Only decrements the displayed
- * `liveTotal` and the submitter's own count — the sequence counter used for
- * milestone detection is left untouched so deleting an old beer doesn't
- * reshuffle which future submission counts as the next milestone.
+ * Deletes a submission the caller owns, and decrements the shared counter so
+ * the group total and milestone countdown both move back down by one. Note:
+ * if an older submission is deleted while newer ones still exist, the next
+ * new submission could be assigned a sequence number that an existing,
+ * still-visible submission already has — an acceptable tradeoff for keeping
+ * the total and the countdown in sync for a small, casual group.
  */
 export async function deleteSubmission(submissionId: string, uid: string) {
   const counterRef = doc(db, 'meta', 'counter');
@@ -94,12 +91,10 @@ export async function deleteSubmission(submissionId: string, uid: string) {
       throw new Error('You can only delete your own submissions.');
     }
 
-    const counterData = counterSnap.data();
-    const currentSequence = (counterData?.total as number) ?? 0;
-    const currentLive = (counterData?.liveTotal as number) ?? currentSequence;
+    const currentTotal = (counterSnap.data()?.total as number) ?? 0;
 
     tx.delete(submissionRef);
     tx.set(userRef, { count: increment(-1) }, { merge: true });
-    tx.set(counterRef, { liveTotal: Math.max(0, currentLive - 1) }, { merge: true });
+    tx.set(counterRef, { total: Math.max(0, currentTotal - 1) }, { merge: true });
   });
 }
