@@ -10,23 +10,29 @@ import { useLeaderboard } from './hooks/useLeaderboard';
 import { useSubmissions } from './hooks/useSubmissions';
 import { firebaseConfigured } from './lib/firebase';
 import { cloudinaryConfigured } from './lib/cloudinary';
+import { deleteSubmission } from './lib/submitBeer';
 
 function Dashboard() {
   const { user } = useAuth();
-  const { total } = useGroupTotal();
+  const { liveTotal, sequenceTotal } = useGroupTotal();
   const { leaders } = useLeaderboard();
   const { submissions } = useSubmissions();
+
+  async function handleDelete(submissionId: string) {
+    if (!user) return;
+    await deleteSubmission(submissionId, user.uid);
+  }
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 pb-12">
       <Header />
-      <GroupTotalCard total={total} />
+      <GroupTotalCard liveTotal={liveTotal} sequenceTotal={sequenceTotal} />
       <div className="grid gap-6 md:grid-cols-2">
         <div className="flex flex-col gap-6">
-          <SubmissionForm groupTotal={total} />
+          <SubmissionForm sequenceTotal={sequenceTotal} />
           <Leaderboard leaders={leaders} currentUid={user?.uid} />
         </div>
-        <SubmissionFeed submissions={submissions} />
+        <SubmissionFeed submissions={submissions} currentUid={user?.uid} onDelete={handleDelete} />
       </div>
     </div>
   );

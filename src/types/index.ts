@@ -12,6 +12,7 @@ export interface Submission {
   displayName: string;
   photoURL: string;
   videoURL: string | null;
+  comment: string | null;
   sequenceNumber: number;
   createdAt: number;
 }

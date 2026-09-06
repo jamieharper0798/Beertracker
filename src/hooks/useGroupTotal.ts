@@ -3,16 +3,20 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 export function useGroupTotal() {
-  const [total, setTotal] = useState(0);
+  const [liveTotal, setLiveTotal] = useState(0);
+  const [sequenceTotal, setSequenceTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, 'meta', 'counter'), (snap) => {
-      setTotal(snap.exists() ? (snap.data().total as number) : 0);
+      const data = snap.data();
+      const sequence = (data?.total as number) ?? 0;
+      setSequenceTotal(sequence);
+      setLiveTotal((data?.liveTotal as number) ?? sequence);
       setLoading(false);
     });
     return unsubscribe;
   }, []);
 
-  return { total, loading };
+  return { liveTotal, sequenceTotal, loading };
 }

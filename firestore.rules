@@ -8,11 +8,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Submissions are append-only and readable by any signed-in user.
+    // Submissions are readable by any signed-in user, created and deleted only
+    // by their owner, and never edited in place (delete + resubmit instead).
     match /submissions/{submissionId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && (!('comment' in request.resource.data)
+          || request.resource.data.comment == null
+          || (request.resource.data.comment is string && request.resource.data.comment.size() <= 280));
+      allow update: if false;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
     }
 
     // Shared global counter used to assign sequence numbers and detect milestones.

@@ -3,17 +3,20 @@ import { useAuth } from '../contexts/AuthContext';
 import { SUBMISSION_MILESTONE } from '../lib/firebase';
 import { submitBeer, VideoRequiredError } from '../lib/submitBeer';
 
-export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
+const COMMENT_MAX_LENGTH = 280;
+
+export function SubmissionForm({ sequenceTotal }: { sequenceTotal: number }) {
   const { user, profile } = useAuth();
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [comment, setComment] = useState('');
   const [videoRequired, setVideoRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const nextNumber = groupTotal + 1;
+  const nextNumber = sequenceTotal + 1;
   const willBeMilestone = nextNumber % SUBMISSION_MILESTONE === 0;
 
   function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
@@ -38,11 +41,13 @@ export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
         displayName: profile.displayName,
         photoFile,
         videoFile,
+        comment: comment.trim() || null,
       });
       setSuccess(`Beer logged! 🍻 (${photoURL ? 'photo saved' : ''})`);
       setPhotoFile(null);
       setPhotoPreview(null);
       setVideoFile(null);
+      setComment('');
       setVideoRequired(false);
     } catch (err) {
       if (err instanceof VideoRequiredError) {
@@ -94,6 +99,18 @@ export function SubmissionForm({ groupTotal }: { groupTotal: number }) {
           onChange={handleVideoChange}
           required={needsVideo}
           className="text-xs file:mr-3 file:rounded-md file:border-0 file:bg-amber-500/80 file:px-3 file:py-1.5 file:text-black file:font-semibold"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm text-amber-100/70">
+        Comment (optional)
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value.slice(0, COMMENT_MAX_LENGTH))}
+          maxLength={COMMENT_MAX_LENGTH}
+          rows={2}
+          placeholder="Say something about this beer…"
+          className="resize-none rounded-lg border border-amber-900/40 bg-black/30 px-3 py-2 text-sm text-amber-50 outline-none placeholder:text-amber-100/30 focus:border-amber-500"
         />
       </label>
 
